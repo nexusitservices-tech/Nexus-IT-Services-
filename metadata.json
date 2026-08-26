@@ -1,0 +1,6 @@
+{
+  "name": "Nexus Business OS",
+  "description": "The operating platform for modern business, technology, projects and AI automation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
