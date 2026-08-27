@@ -67,7 +67,7 @@ const SERVICES = [
 export default function Services() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-[#0066CC] selection:text-white overflow-x-hidden">
-      <PublicNavbar transparentOnTop={false} />
+      <PublicNavbar />
       
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>

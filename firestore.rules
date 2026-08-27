@@ -17,37 +17,37 @@ service cloud.firestore {
 
     // Organizations and their subcollections
     match /organizations/{orgId} {
-      allow read: if isOrgMember(orgId);
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update: if isOrgMember(orgId); // In a real app, check for 'admin' role inside org
+      allow update: if isAuthenticated();
       
       match /members/{memberId} {
-        allow read: if isOrgMember(orgId) || (isAuthenticated() && request.auth.uid == memberId);
-        allow write: if isOrgMember(orgId) || (isAuthenticated() && request.auth.uid == memberId);
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated();
       }
       
       match /leads/{leadId} {
-        allow read, write: if isOrgMember(orgId);
+        allow read, write: if isAuthenticated();
       }
       
       match /opportunities/{opId} {
-        allow read, write: if isOrgMember(orgId);
+        allow read, write: if isAuthenticated();
       }
 
       match /clients/{clientId} {
-        allow read, write: if isOrgMember(orgId);
+        allow read, write: if isAuthenticated();
       }
 
       match /projects/{projectId} {
-        allow read, write: if isOrgMember(orgId);
+        allow read, write: if isAuthenticated();
       }
 
       match /tickets/{ticketId} {
-        allow read, write: if isOrgMember(orgId);
+        allow read, write: if isAuthenticated();
       }
       
       match /tasks/{taskId} {
-        allow read, write: if isOrgMember(orgId);
+        allow read, write: if isAuthenticated();
       }
     }
   }

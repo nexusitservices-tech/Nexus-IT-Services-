@@ -9,6 +9,7 @@ export default function Login({ isRegister = false }: { isRegister?: boolean }) 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [accountType, setAccountType] = useState<'admin' | 'client'>('client');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -68,10 +69,22 @@ export default function Login({ isRegister = false }: { isRegister?: boolean }) 
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const uid = userCredential.user.uid;
         
-        // Seed the demo data (org, projects, opportunities)
-        await seedDemoData(uid, email, name);
-        
-        navigate('/app/dashboard');
+        if (accountType === 'admin') {
+          // Seed the demo data (org, projects, opportunities)
+          await seedDemoData(uid, email, name);
+          navigate('/app/dashboard');
+        } else {
+          // Create client user
+          await setDoc(doc(db, 'users', uid), {
+            id: uid,
+            email,
+            displayName: name,
+            role: 'CLIENT_USER',
+            organizationId: 'demo-org',
+            createdAt: new Date().toISOString()
+          });
+          navigate('/portal');
+        }
       } else {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
@@ -314,6 +327,33 @@ export default function Login({ isRegister = false }: { isRegister?: boolean }) 
               />
             </div>
           </div>
+
+          {isRegister && (
+            <div className="flex items-center justify-center gap-6 py-2">
+              <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="accountType" 
+                  value="client"
+                  checked={accountType === 'client'}
+                  onChange={() => setAccountType('client')}
+                  className="text-[#0066CC] focus:ring-[#0066CC]"
+                />
+                Client Portal Access
+              </label>
+              <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="accountType" 
+                  value="admin"
+                  checked={accountType === 'admin'}
+                  onChange={() => setAccountType('admin')}
+                  className="text-[#0066CC] focus:ring-[#0066CC]"
+                />
+                Staff Access
+              </label>
+            </div>
+          )}
 
           <div>
             <button

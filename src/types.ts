@@ -6,6 +6,7 @@ export interface User {
   displayName: string;
   role: Role;
   organizationId: string;
+  clientId?: string;
   avatarUrl?: string;
   createdAt: string;
 }
@@ -21,6 +22,7 @@ export type LeadStatus = 'New' | 'Contacted' | 'Qualified' | 'Nurturing' | 'Conv
 export interface Lead {
   id: string;
   organizationId: string;
+  clientId?: string;
   company: string;
   contactName: string;
   email: string;
@@ -59,6 +61,7 @@ export interface Opportunity {
 export interface Client {
   id: string;
   organizationId: string;
+  clientId?: string;
   name: string;
   industry: string;
   website: string;
@@ -103,6 +106,7 @@ export type TaskStatus = 'Todo' | 'In Progress' | 'Review' | 'Done';
 export interface Task {
   id: string;
   organizationId: string;
+  clientId?: string;
   projectId: string;
   title: string;
   description: string;
@@ -115,10 +119,40 @@ export interface Task {
 export interface AuditLog {
   id: string;
   organizationId: string;
+  clientId?: string;
   actorId: string;
   action: string;
   entityType: string;
   entityId: string;
   timestamp: string;
   metadata?: any;
+}
+
+export type InvoiceStatus = 'Draft' | 'Sent' | 'Partially Paid' | 'Paid' | 'Overdue' | 'Void';
+export interface Invoice {
+  id: string;
+  organizationId: string;
+  clientId: string;
+  invoiceNumber: string;
+  projectId?: string;
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  dueDate: string;
+  status: InvoiceStatus;
+  createdAt: string;
+}
+
+export type ProposalStatus = 'Draft' | 'Internal Review' | 'Sent' | 'Viewed' | 'Approved' | 'Rejected' | 'Expired';
+export interface Proposal {
+  id: string;
+  organizationId: string;
+  clientId?: string;
+  opportunityId?: string;
+  title: string;
+  value: number;
+  status: ProposalStatus;
+  validUntil: string;
+  createdAt: string;
 }

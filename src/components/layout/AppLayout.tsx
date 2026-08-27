@@ -22,7 +22,12 @@ import {
   Bell,
   Search,
   Menu,
-  X
+  X,
+  FolderOpen,
+  Bot,
+  Calendar,
+  Settings,
+  ShieldAlert
 } from 'lucide-react';
 
 const navItems = [
@@ -37,9 +42,15 @@ const navItems = [
   { name: 'Assets', href: '/app/assets', icon: Monitor },
   { name: 'Contracts', href: '/app/contracts', icon: FileText },
   { name: 'Invoices', href: '/app/invoices', icon: FileArchive },
+  { name: 'Files', href: '/app/files', icon: FolderOpen },
   { name: 'Messages', href: '/app/messages', icon: MessageSquare },
+  { name: 'Automations', href: '/app/automations', icon: Bot },
   { name: 'AI Copilot', href: '/app/ai', icon: Sparkles },
   { name: 'Analytics', href: '/app/analytics', icon: BarChart3 },
+  { name: 'Team', href: '/app/users', icon: Users },
+  { name: 'Calendar', href: '/app/calendar', icon: Calendar },
+  { name: 'Settings', href: '/app/settings', icon: Settings },
+  { name: 'Audit Log', href: '/app/audit-log', icon: ShieldAlert },
 ];
 
 export default function AppLayout() {
@@ -49,7 +60,7 @@ export default function AppLayout() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-slate-50 flex font-sans">
+      <div className="h-screen bg-slate-50 flex font-sans overflow-hidden">
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
           <div 
