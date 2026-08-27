@@ -1,32 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useSWR from 'swr';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/authStore';
 import { Lead } from '@/types';
-import { Plus, Search, MoreVertical } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Plus, Search, MoreVertical, Target } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+
+const fetchLeads = async (orgId: string) => {
+  const q = query(collection(db, 'organizations', orgId, 'leads'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
+};
 
 export default function Leads() {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
-
-  useEffect(() => {
-    async function fetchLeads() {
-      if (!user?.organizationId) return;
-      try {
-        const q = query(collection(db, 'organizations', user.organizationId, 'leads'));
-        const querySnapshot = await getDocs(q);
-        const fetchedLeads = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Lead));
-        setLeads(fetchedLeads);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchLeads();
-  }, [user]);
+  
+  const { data: leads, error, isLoading } = useSWR(
+    user?.organizationId ? ['leads', user.organizationId] : null,
+    ([, orgId]) => fetchLeads(orgId),
+    { revalidateOnFocus: false }
+  );
 
   return (
     <div className="space-y-6">
@@ -35,7 +31,7 @@ export default function Leads() {
           <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
           <p className="text-slate-500">Manage incoming inquiries and prospects.</p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
           <Plus className="w-5 h-5" />
           Add Lead
         </button>
@@ -64,11 +60,24 @@ export default function Leads() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {loading ? (
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4"><Skeleton className="h-5 w-32" /></td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-4 w-24 mb-2" />
+                      <Skeleton className="h-3 w-32" />
+                    </td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-28" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                    <td className="px-6 py-4 text-right"><Skeleton className="h-8 w-8 rounded-lg ml-auto" /></td>
+                  </tr>
+                ))
+              ) : error ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Loading leads...</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-red-500">Failed to load leads.</td>
                 </tr>
-              ) : leads.length === 0 ? (
+              ) : !leads || leads.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 mb-4">
@@ -93,9 +102,16 @@ export default function Leads() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-2 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button className="p-2 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition-colors">
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Actions</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </td>
                   </tr>
                 ))
@@ -108,5 +124,3 @@ export default function Leads() {
   );
 }
 
-// Needed because I used Target inside the empty state
-import { Target } from 'lucide-react';

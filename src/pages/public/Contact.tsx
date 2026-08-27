@@ -26,7 +26,7 @@ export default function Contact() {
               Let's build something <span className="text-[#0066CC]">together.</span>
             </h1>
             <p className="text-xl text-slate-600 mb-10 leading-relaxed">
-              Whether you need a single project delivered, an ongoing technology partner, or a strategic advisor for your digital transformation, Nexus Tech is ready to start with a conversation about your goals.
+              Whether you need a single project delivered, an ongoing technology partner, or a strategic advisor for your digital transformation, Nexus IT Services is ready to start with a conversation about your goals.
             </p>
 
             <div className="space-y-8">

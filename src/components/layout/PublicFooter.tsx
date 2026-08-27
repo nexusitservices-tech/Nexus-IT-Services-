@@ -6,10 +6,13 @@ export default function PublicFooter() {
     <footer className="bg-[#0F172A] text-slate-400 py-20 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
       <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-16">
         <div className="col-span-2 lg:col-span-2">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0066CC] to-[#00C9A7] flex items-center justify-center text-white font-bold text-2xl italic shadow-md">N</div>
-            <span className="font-bold text-2xl text-white tracking-tight">NEXUS <span className="font-light text-[#0066CC]">TECH</span></span>
-          </div>
+          <Link to="/" className="inline-block mb-8">
+            <img 
+              src="/logo.gif" 
+              alt="Nexus IT Services" 
+              className="h-12 object-contain bg-white/10 p-1.5 rounded" 
+            />
+          </Link>
           <p className="text-slate-500 mb-8 max-w-sm leading-relaxed text-sm">
             One partner. Every technology capability your business needs to grow. Built natively with AI for UAE and GCC enterprises.
           </p>
@@ -59,7 +62,7 @@ export default function PublicFooter() {
       </div>
       
       <div className="max-w-7xl mx-auto pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-6 text-sm font-medium">
-        <div>&copy; {new Date().getFullYear()} Nexus Tech | Dubai, UAE</div>
+        <div>&copy; {new Date().getFullYear()} Nexus IT Services | Dubai, UAE</div>
         <div className="flex flex-wrap justify-center items-center gap-6 md:gap-8">
           <button className="text-white hover:text-[#00C9A7] transition-colors border-r border-slate-700 pr-6 md:pr-8">English | العربية</button>
           <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>

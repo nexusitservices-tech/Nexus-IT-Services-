@@ -77,7 +77,7 @@ export default function Services() {
             <span className="text-[#0066CC]">One accountable partner.</span>
           </h1>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Whether you need a single project delivered or an ongoing technology partner, Nexus Tech's services are designed to work together — so the website we build can be automated with AI, the network we manage can be secured, and the brand we design can be brought to life.
+            Whether you need a single project delivered or an ongoing technology partner, Nexus IT Services' services are designed to work together — so the website we build can be automated with AI, the network we manage can be secured, and the brand we design can be brought to life.
           </p>
         </motion.div>
       </section>

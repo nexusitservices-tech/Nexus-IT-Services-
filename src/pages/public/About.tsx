@@ -22,7 +22,7 @@ export default function About() {
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center relative">
         <div className="absolute top-20 right-20 w-[400px] h-[400px] bg-blue-400/10 rounded-full blur-[80px] -z-10 animate-pulse"></div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-          <p className="text-[#0066CC] font-bold tracking-widest uppercase text-sm mb-4">About Nexus Tech</p>
+          <p className="text-[#0066CC] font-bold tracking-widest uppercase text-sm mb-4">About Nexus IT Services</p>
           <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-6">
             One technology partner.<br />
             <span className="text-[#0066CC]">Every capability your business needs.</span>

@@ -1,38 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import useSWR from 'swr';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/authStore';
 import { Opportunity, OpportunityStage } from '@/types';
 import { Plus, Search, MoreHorizontal, Calendar, DollarSign } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const STAGES: OpportunityStage[] = [
   'Discovery', 'Qualification', 'Solution Design', 'Proposal Sent', 'Negotiation', 'Won', 'Lost'
 ];
 
+const fetchOpps = async (orgId: string) => {
+  const q = query(collection(db, 'organizations', orgId, 'opportunities'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Opportunity));
+};
+
 export default function Opportunities() {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
 
-  useEffect(() => {
-    async function fetchOpps() {
-      if (!user?.organizationId) return;
-      try {
-        const q = query(collection(db, 'organizations', user.organizationId, 'opportunities'));
-        const querySnapshot = await getDocs(q);
-        const fetched = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Opportunity));
-        setOpportunities(fetched);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchOpps();
-  }, [user]);
+  const { data: opportunities, error, isLoading } = useSWR(
+    user?.organizationId ? ['opportunities', user.organizationId] : null,
+    ([, orgId]) => fetchOpps(orgId),
+    { revalidateOnFocus: false }
+  );
 
   const getOppsByStage = (stage: OpportunityStage) => {
-    return opportunities.filter(opp => opp.stage === stage);
+    return (opportunities || []).filter(opp => opp.stage === stage);
   };
 
   const formatCurrency = (val: number) => {
@@ -55,7 +51,7 @@ export default function Opportunities() {
               className="w-64 pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
             />
           </div>
-          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
             <Plus className="w-5 h-5" />
             New Opportunity
           </button>
@@ -69,28 +65,47 @@ export default function Opportunities() {
               <div className="p-3 border-b border-slate-200 bg-slate-100 flex justify-between items-center shrink-0">
                 <h3 className="font-semibold text-slate-800 text-sm">{stage}</h3>
                 <span className="bg-white text-slate-600 text-xs font-bold px-2 py-0.5 rounded-full border border-slate-200">
-                  {getOppsByStage(stage).length}
+                  {isLoading ? <Skeleton className="h-4 w-6 rounded-full" /> : getOppsByStage(stage).length}
                 </span>
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                {getOppsByStage(stage).map(opp => (
-                  <div key={opp.id} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-medium text-slate-900 text-sm leading-tight">{opp.name}</h4>
-                      <button className="text-slate-400 hover:text-blue-600 -mt-1 -mr-1 p-1">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
+                {isLoading ? (
+                  Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm space-y-3">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-4 w-1/3" />
                     </div>
-                    <p className="text-xs text-slate-500 mb-3">{opp.servicePillar}</p>
-                    
-                    <div className="flex items-center gap-4 text-xs text-slate-600">
-                      <div className="flex items-center gap-1 font-medium text-slate-700">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
-                        {formatCurrency(opp.estimatedValue)}
+                  ))
+                ) : error ? (
+                  <div className="text-center p-4 text-red-500 text-sm">Failed to load</div>
+                ) : (
+                  getOppsByStage(stage).map(opp => (
+                    <div key={opp.id} className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-medium text-slate-900 text-sm leading-tight">{opp.name}</h4>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button className="text-slate-400 hover:text-blue-600 -mt-1 -mr-1 p-1">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Options</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-3">{opp.servicePillar}</p>
+                      
+                      <div className="flex items-center gap-4 text-xs text-slate-600">
+                        <div className="flex items-center gap-1 font-medium text-slate-700">
+                          <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+                          {formatCurrency(opp.estimatedValue)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           ))}

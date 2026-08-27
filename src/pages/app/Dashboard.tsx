@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import useSWR from 'swr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Target, Users, Zap, Briefcase, LifeBuoy, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, limit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuthStore } from '@/store/authStore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const mockPipelineData = [
   { name: 'Jan', value: 4000 },
@@ -15,53 +17,35 @@ const mockPipelineData = [
   { name: 'Jun', value: 2390 },
 ];
 
+const fetchDashboardStats = async (orgId: string) => {
+  const clientsQuery = query(collection(db, 'organizations', orgId, 'clients'));
+  const clientsSnap = await getDocs(clientsQuery);
+  
+  const oppsQuery = query(collection(db, 'organizations', orgId, 'opportunities'), where('stage', 'not-in', ['Won', 'Lost']));
+  const oppsSnap = await getDocs(oppsQuery);
+
+  const projectsQuery = query(collection(db, 'organizations', orgId, 'projects'), where('status', 'in', ['Active', 'At Risk']));
+  const projectsSnap = await getDocs(projectsQuery);
+
+  const ticketsQuery = query(collection(db, 'organizations', orgId, 'tickets'), where('status', 'not-in', ['Resolved', 'Closed']));
+  const ticketsSnap = await getDocs(ticketsQuery);
+
+  return {
+    activeClients: clientsSnap.size,
+    openOpportunities: oppsSnap.size,
+    projectsInProgress: projectsSnap.size,
+    unresolvedTickets: ticketsSnap.size
+  };
+};
+
 export default function Dashboard() {
   const { user } = useAuthStore();
-  const [stats, setStats] = useState({
-    activeClients: 0,
-    openOpportunities: 0,
-    projectsInProgress: 0,
-    unresolvedTickets: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchStats() {
-      if (!user?.organizationId) return;
-      
-      try {
-        // In a real app with large collections, you might use aggregation queries or maintain a stats document.
-        // For MVP, we'll do simple queries.
-        
-        const orgId = user.organizationId;
-        
-        const clientsQuery = query(collection(db, 'organizations', orgId, 'clients'));
-        const clientsSnap = await getDocs(clientsQuery);
-        
-        const oppsQuery = query(collection(db, 'organizations', orgId, 'opportunities'), where('stage', 'not-in', ['Won', 'Lost']));
-        const oppsSnap = await getDocs(oppsQuery);
-
-        const projectsQuery = query(collection(db, 'organizations', orgId, 'projects'), where('status', 'in', ['Active', 'At Risk']));
-        const projectsSnap = await getDocs(projectsQuery);
-
-        const ticketsQuery = query(collection(db, 'organizations', orgId, 'tickets'), where('status', 'not-in', ['Resolved', 'Closed']));
-        const ticketsSnap = await getDocs(ticketsQuery);
-
-        setStats({
-          activeClients: clientsSnap.size,
-          openOpportunities: oppsSnap.size,
-          projectsInProgress: projectsSnap.size,
-          unresolvedTickets: ticketsSnap.size
-        });
-      } catch (error) {
-        console.error("Failed to fetch dashboard stats", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchStats();
-  }, [user]);
+  
+  const { data: stats, isLoading } = useSWR(
+    user?.organizationId ? ['dashboardStats', user.organizationId] : null,
+    ([, orgId]) => fetchDashboardStats(orgId),
+    { revalidateOnFocus: false }
+  );
 
   return (
     <div className="space-y-8">
@@ -74,10 +58,10 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Active Clients" value={loading ? '...' : stats.activeClients} icon={Users} color="text-blue-600" bg="bg-blue-50" />
-        <StatCard title="Open Opportunities" value={loading ? '...' : stats.openOpportunities} icon={Zap} color="text-amber-600" bg="bg-amber-50" />
-        <StatCard title="Active Projects" value={loading ? '...' : stats.projectsInProgress} icon={Briefcase} color="text-emerald-600" bg="bg-emerald-50" />
-        <StatCard title="Unresolved Tickets" value={loading ? '...' : stats.unresolvedTickets} icon={LifeBuoy} color="text-rose-600" bg="bg-rose-50" />
+        <StatCard title="Active Clients" value={stats?.activeClients} icon={Users} color="text-blue-600" bg="bg-blue-50" isLoading={isLoading} />
+        <StatCard title="Open Opportunities" value={stats?.openOpportunities} icon={Zap} color="text-amber-600" bg="bg-amber-50" isLoading={isLoading} />
+        <StatCard title="Active Projects" value={stats?.projectsInProgress} icon={Briefcase} color="text-emerald-600" bg="bg-emerald-50" isLoading={isLoading} />
+        <StatCard title="Unresolved Tickets" value={stats?.unresolvedTickets} icon={LifeBuoy} color="text-rose-600" bg="bg-rose-50" isLoading={isLoading} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -132,7 +116,7 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, icon: Icon, color, bg }: any) {
+function StatCard({ title, value, icon: Icon, color, bg, isLoading }: any) {
   return (
     <Card className="shadow-sm border-slate-200">
       <CardContent className="p-6 flex items-center gap-4">
@@ -141,7 +125,11 @@ function StatCard({ title, value, icon: Icon, color, bg }: any) {
         </div>
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
-          <h3 className="text-2xl font-bold text-slate-900">{value}</h3>
+          {isLoading ? (
+            <Skeleton className="h-8 w-16 mt-1" />
+          ) : (
+            <h3 className="text-2xl font-bold text-slate-900">{value}</h3>
+          )}
         </div>
       </CardContent>
     </Card>

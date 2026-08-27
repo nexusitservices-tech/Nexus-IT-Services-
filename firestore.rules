@@ -22,8 +22,8 @@ service cloud.firestore {
       allow update: if isOrgMember(orgId); // In a real app, check for 'admin' role inside org
       
       match /members/{memberId} {
-        allow read: if isOrgMember(orgId);
-        allow write: if isOrgMember(orgId); 
+        allow read: if isOrgMember(orgId) || (isAuthenticated() && request.auth.uid == memberId);
+        allow write: if isOrgMember(orgId) || (isAuthenticated() && request.auth.uid == memberId);
       }
       
       match /leads/{leadId} {
